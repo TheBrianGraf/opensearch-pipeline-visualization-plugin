@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import ReactFlow, { Handle, Position, Background, Controls, Node, Edge } from 'reactflow';
+import ReactFlow, { Handle, Position, Background, Controls, Node } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
   EuiPanel,
@@ -15,7 +15,7 @@ import {
 } from '@elastic/eui';
 import { routeService } from '../../route_service';
 import { OsIngestPipeline, OsSearchPipeline } from '../../common';
-import { pipelineToFlow } from '../../models/pipeline_to_flow';
+import { ingestPipelineToFlow, searchPipelineToFlow } from '../../models/pipeline_to_flow';
 import { PipelineInputNode } from '../../components/nodes/pipeline_input_node';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -208,7 +208,9 @@ export function PerformanceTab({ pipelineId, pipelineType, pipeline }: Props) {
 
   // Build heat-augmented React Flow graph
   const { nodes, edges } = useMemo(() => {
-    const base = pipelineToFlow(pipeline, pipelineType);
+    const base = pipelineType === 'ingest'
+      ? ingestPipelineToFlow(pipelineId, pipeline as OsIngestPipeline)
+      : searchPipelineToFlow(pipelineId, pipeline as OsSearchPipeline);
     if (!stats || !stats.processors.length) return base;
 
     const maxTime = Math.max(...stats.processors.map((p) => p.timeMs), 1);
@@ -242,7 +244,7 @@ export function PerformanceTab({ pipelineId, pipelineType, pipeline }: Props) {
     });
 
     return { nodes: augmented, edges: base.edges };
-  }, [pipeline, pipelineType, stats]);
+  }, [pipeline, pipelineId, pipelineType, stats]);
 
   const nodeTypes = useMemo(
     () => ({
