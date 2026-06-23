@@ -53,6 +53,10 @@ export class RouteService {
   async listIndicesWithPipelineSettings(): Promise<IndexPipelineSettings[]> {
     return getHttp().get<IndexPipelineSettings[]>(INDICES_NODE_API_PATH);
   }
+
+  async getPipelineStats(pipelineType: 'ingest' | 'search', id: string): Promise<any> {
+    return getHttp().get(`/api/pipeline_visualizer/stats/${pipelineType}/${encodeURIComponent(id)}`);
+  }
 }
 
 export const routeService = new RouteService();

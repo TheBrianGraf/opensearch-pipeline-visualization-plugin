@@ -6,6 +6,7 @@ import { registerMlRoutes } from './ml_routes';
 import { registerIndexRoutes } from './index_routes';
 import { registerSimulateRoutes } from './simulate_routes';
 import { registerDemoRoutes } from './demo_routes';
+import { registerStatsRoutes } from './stats_routes';
 
 export function registerRoutes(router: IRouter) {
   registerIngestRoutes(router);
@@ -15,4 +16,5 @@ export function registerRoutes(router: IRouter) {
   registerIndexRoutes(router);
   registerSimulateRoutes(router);
   registerDemoRoutes(router);
+  registerStatsRoutes(router);
 }
