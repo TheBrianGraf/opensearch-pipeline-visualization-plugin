@@ -1,0 +1,31 @@
+# Node
+node_modules/
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+
+# Build outputs
+pipeline-visualizer/build/
+pipeline-visualizer/target/
+
+# OSD dev artifacts
+pipeline-visualizer/.cache/
+pipeline-visualizer/tsconfig.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.local
+*.env
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker volumes (data persisted locally)
+opensearch-data/

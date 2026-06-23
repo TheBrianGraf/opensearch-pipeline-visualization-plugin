@@ -1,0 +1,7 @@
+# Never copy these into the Docker build context
+pipeline-visualizer/node_modules
+pipeline-visualizer/target
+pipeline-visualizer/build
+*.log
+.git
+.gitignore

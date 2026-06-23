@@ -1,0 +1,13 @@
+# Single-node OpenSearch config for local development
+cluster.name: pv-cluster
+node.name: pv-node-1
+discovery.type: single-node
+network.host: 0.0.0.0
+http.port: 9200
+
+# Disable memory lock (not needed for dev)
+bootstrap.memory_lock: false
+
+# Disable security plugin for local development
+# Remove this block and configure credentials for any non-local deployment
+plugins.security.disabled: true

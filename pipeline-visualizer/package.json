@@ -1,0 +1,25 @@
+{
+  "name": "pipeline-visualizer",
+  "version": "3.0.0.0",
+  "description": "OpenSearch Dashboards plugin for visualizing and editing ingest, search, and ML inference pipelines",
+  "license": "Apache-2.0",
+  "scripts": {
+    "osd": "node ../../scripts/osd",
+    "lint:es": "node ../../scripts/eslint --no-eslintrc --config .eslintrc.js",
+    "test:jest": "node ../../scripts/jest --config jest.config.js",
+    "build": "node ../../scripts/plugin_helpers build",
+    "plugin-helpers": "node ../../scripts/plugin_helpers"
+  },
+  "dependencies": {
+    "reactflow": "^11.11.4",
+    "@reduxjs/toolkit": "^1.6.1",
+    "react-redux": "^8.1.0",
+    "dagre": "^0.8.5"
+  },
+  "devDependencies": {
+    "@types/dagre": "^0.7.52"
+  },
+  "peerDependencies": {
+    "opensearch-dashboards": "*"
+  }
+}

@@ -1,0 +1,73 @@
+# Pipeline Visualizer — local dev stack
+# OpenSearch 3.7.0 (single node, security enabled) + OSD with plugin
+#
+# Login: admin / 0p3nPipes!Viz#7
+#
+# Usage:
+#   docker compose build          # first run: ~20-30 min
+#   docker compose up -d          # start in background
+#   docker compose logs -f osd    # watch OSD startup
+#   docker compose down -v        # stop and remove data
+
+services:
+
+  # ── OpenSearch ──────────────────────────────────────────────────────────────
+  opensearch:
+    image: opensearchproject/opensearch:3.7.0
+    container_name: pv-opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      # Sets the admin password for the built-in security plugin demo config.
+      # Required since OpenSearch 2.12.
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=0p3nPipes!Viz#7
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - pv-net
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "curl -skf -u admin:0p3nPipes!Viz#7 https://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── OpenSearch Dashboards + Pipeline Visualizer plugin ────────────────────
+  osd:
+    build:
+      context: .
+      dockerfile: Dockerfile.osd
+      args:
+        OSD_VERSION: "3.7.0"
+    container_name: pv-osd
+    volumes:
+      # Mount config so changes don't require a full image rebuild
+      - ./osd.docker.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+    ports:
+      - "5601:5601"
+    networks:
+      - pv-net
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "curl -sf http://localhost:5601/api/status | grep -q 'available'"
+      interval: 20s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+networks:
+  pv-net:
+    driver: bridge
+
+volumes:
+  opensearch-data:

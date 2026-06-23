@@ -1,0 +1,92 @@
+# syntax=docker/dockerfile:1
+#
+# Multi-stage build:
+#   Stage 1 (builder) — downloads OSD 3.7.0 source, bootstraps, compiles the plugin zip
+#   Stage 2 (runtime) — official OSD 3.7.0 image + installs the compiled zip
+#
+# Layer order is deliberate:
+#   - Download and bootstrap happen BEFORE the plugin COPY so that
+#     changing plugin source files doesn't bust the expensive (~15 min)
+#     bootstrap cache layer.
+
+# ─── Stage 1: Build ──────────────────────────────────────────────────────────
+FROM node:20-bullseye-slim AS builder
+
+ARG OSD_VERSION=3.7.0
+
+# Native build tools + ca-certificates for HTTPS downloads
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl ca-certificates python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Activate Yarn 1.x classic via corepack (Node 20 ships with corepack+yarn 4)
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+
+# OSD refuses to run certain scripts as root; create a dedicated non-root user.
+RUN useradd -m -u 1001 osd-builder
+
+WORKDIR /osd
+RUN chown osd-builder:osd-builder /osd
+
+# All steps from here run as the non-root build user.
+USER osd-builder
+
+# ── Download OSD source ──────────────────────────────────────────────────────
+RUN echo "Downloading OpenSearch Dashboards ${OSD_VERSION}..." \
+    && curl -fsSL \
+       "https://github.com/opensearch-project/OpenSearch-Dashboards/archive/refs/tags/${OSD_VERSION}.tar.gz" \
+       -o /tmp/osd-src.tar.gz \
+    && echo "Archive: $(du -sh /tmp/osd-src.tar.gz | cut -f1)" \
+    && tar -xzf /tmp/osd-src.tar.gz --strip-components=1 \
+    && rm /tmp/osd-src.tar.gz
+
+# OSD's bootstrap post-install hook calls git; create a minimal repo.
+RUN git init \
+    && git config user.email "build@docker.local" \
+    && git config user.name "Docker Build" \
+    && git commit --allow-empty -m "placeholder"
+
+# ── Copy plugin manifest + package.json BEFORE bootstrap ─────────────────────
+# This lets yarn install resolve reactflow, dagre, etc. during bootstrap.
+# Only package.json changes (not TypeScript edits) bust the bootstrap layer.
+COPY --chown=osd-builder:osd-builder pipeline-visualizer/package.json plugins/pipeline-visualizer/package.json
+COPY --chown=osd-builder:osd-builder pipeline-visualizer/opensearch_dashboards.json plugins/pipeline-visualizer/opensearch_dashboards.json
+
+# ── Bootstrap OSD ─────────────────────────────────────────────────────────────
+RUN echo "Bootstrapping OSD (~15-20 min first run, cached on rebuild)..." \
+    && yarn osd bootstrap
+
+# ── Copy full plugin source and build ────────────────────────────────────────
+# Changing TypeScript/TSX/SCSS only busts these two layers, not bootstrap.
+COPY --chown=osd-builder:osd-builder pipeline-visualizer/ plugins/pipeline-visualizer/
+
+RUN echo "Building plugin..." \
+    && cd plugins/pipeline-visualizer \
+    && node ../../scripts/plugin_helpers build \
+    && echo "Build artefacts:" \
+    && ls -lh build/
+
+# ─── Stage 2: Runtime ────────────────────────────────────────────────────────
+FROM opensearchproject/opensearch-dashboards:3.7.0
+
+USER root
+
+RUN mkdir -p /tmp/pv_plugin
+COPY --from=builder /osd/plugins/pipeline-visualizer/build/ /tmp/pv_plugin/
+
+# Use a shell glob (no `find` in the minimal OSD image) and --allow-root
+RUN for plugin_zip in /tmp/pv_plugin/*.zip; do \
+      echo "Installing plugin: $plugin_zip" \
+      && /usr/share/opensearch-dashboards/bin/opensearch-dashboards-plugin install "file://${plugin_zip}" --allow-root; \
+    done \
+    && rm -rf /tmp/pv_plugin
+
+COPY osd.docker.yml /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+
+RUN chown -R opensearch-dashboards:opensearch-dashboards \
+    /usr/share/opensearch-dashboards/plugins/ \
+    /usr/share/opensearch-dashboards/config/
+
+USER opensearch-dashboards
+
+EXPOSE 5601
