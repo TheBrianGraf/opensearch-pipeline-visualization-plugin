@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ReactFlow, { Handle, Position, Background, Controls, Node } from 'reactflow';
-import 'reactflow/dist/style.css';
 import {
   EuiPanel,
   EuiStat,
