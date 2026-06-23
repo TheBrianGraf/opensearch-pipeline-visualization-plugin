@@ -22,9 +22,15 @@ export class PipelineVisualizerPlugin implements Plugin<PipelineVisualizerPlugin
       title: PLUGIN_NAME,
       navLinkStatus: AppNavLinkStatus.visible,
       mount: async (params: AppMountParameters) => {
+        // eslint-disable-next-line no-console
+        console.log('[PipelineVisualizer] mount() called — loading app chunks');
         const [coreStart] = await core.getStartServices();
+        // eslint-disable-next-line no-console
+        console.log('[PipelineVisualizer] getStartServices() resolved, loading render_app');
         setCore(coreStart);
         const { renderApp } = await import('./render_app');
+        // eslint-disable-next-line no-console
+        console.log('[PipelineVisualizer] render_app loaded, calling renderApp');
         return renderApp(coreStart, params);
       },
     });
