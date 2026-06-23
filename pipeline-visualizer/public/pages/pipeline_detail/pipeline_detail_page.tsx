@@ -12,6 +12,7 @@ import { PrerequisitesPanel } from '../../components/prerequisites_panel';
 import { CanvasTab } from './canvas_tab';
 import { JsonTab } from './json_tab';
 import { IndexAssocTab } from './index_assoc_tab';
+import { SimulateTab } from './simulate_tab';
 import { getNotifications } from '../../services';
 
 interface RouteParams { id: string; }
@@ -89,6 +90,20 @@ export function PipelineDetailPage({ pipelineType }: Props) {
             </>
           ),
         },
+        ...(pipelineType === 'ingest'
+          ? [
+              {
+                id: 'simulate',
+                name: 'Simulate',
+                content: (
+                  <>
+                    <EuiSpacer />
+                    <SimulateTab pipelineId={id} />
+                  </>
+                ),
+              },
+            ]
+          : []),
       ]
     : [];
 

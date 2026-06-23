@@ -76,8 +76,35 @@ export function StartHerePage() {
         />
 
         <EuiPageContent>
+          {/* Demo Data callout */}
+          <EuiCallOut
+            title="Want to see pipelines in action right away?"
+            iconType="beaker"
+            color="primary"
+          >
+            <EuiFlexGroup alignItems="center" gutterSize="m" responsive={false}>
+              <EuiFlexItem>
+                <EuiText size="s">
+                  Load a pre-built demo scenario with real pipelines, indices, and sample documents —
+                  then explore the results in the Ecosystem Map and run documents through the Simulator.
+                </EuiText>
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                <EuiButton
+                  iconType="arrowRight"
+                  iconSide="right"
+                  onClick={() => history.push('/pipeline-visualizer/demo')}
+                >
+                  Load Demo Data
+                </EuiButton>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+          </EuiCallOut>
+
+          <EuiSpacer size="xl" />
+
           {/* Section 1: What are pipelines? */}
-          <EuiCallOut title="What are pipelines?" iconType="iInCircle" color="primary">
+          <EuiCallOut title="What are pipelines?" iconType="iInCircle" color="subdued">
             <EuiFlexGroup gutterSize="xl" wrap>
               <EuiFlexItem>
                 <EuiText size="s">

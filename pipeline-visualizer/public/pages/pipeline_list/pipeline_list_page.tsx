@@ -89,6 +89,9 @@ export function PipelineListPage() {
             <EuiButtonEmpty key="home" iconType="home" onClick={() => history.push('/pipeline-visualizer')}>
               Start Here
             </EuiButtonEmpty>,
+            <EuiButtonEmpty key="demo" iconType="beaker" onClick={() => history.push('/pipeline-visualizer/demo')}>
+              Demo Data
+            </EuiButtonEmpty>,
           ]}
           bottomBorder
         />

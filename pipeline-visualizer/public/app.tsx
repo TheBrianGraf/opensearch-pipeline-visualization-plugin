@@ -5,12 +5,14 @@ import { PipelineDetailPage } from './pages/pipeline_detail';
 import { PipelineEditorPage } from './pages/pipeline_editor';
 import { EcosystemMapPage } from './pages/ecosystem_map';
 import { StartHerePage } from './pages/start_here';
+import { DemoPage } from './pages/demo';
 
 export function App() {
   return (
     <Switch>
       <Route exact path="/pipeline-visualizer" component={StartHerePage} />
       <Route exact path="/pipeline-visualizer/ecosystem" component={EcosystemMapPage} />
+      <Route exact path="/pipeline-visualizer/demo" component={DemoPage} />
       <Route exact path="/pipeline-visualizer/pipelines" component={PipelineListPage} />
       <Route path="/pipeline-visualizer/ingest/:id" render={() => <PipelineDetailPage pipelineType="ingest" />} />
       <Route path="/pipeline-visualizer/search/:id" render={() => <PipelineDetailPage pipelineType="search" />} />
