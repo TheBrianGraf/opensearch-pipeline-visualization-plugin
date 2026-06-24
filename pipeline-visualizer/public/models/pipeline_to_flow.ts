@@ -31,14 +31,22 @@ function processorConfig(p: OsProcessor): Record<string, unknown> {
 }
 function isML(type: string): boolean { return (ML_PROCESSOR_TYPES as readonly string[]).includes(type); }
 
-function applyLayout(nodes: PvFlowNode[], edges: PvFlowEdge[]): PvFlowNode[] {
+export function applyDagreLayout(
+  nodes: PvFlowNode[],
+  edges: PvFlowEdge[],
+  sizeOf?: (node: PvFlowNode) => { width: number; height: number }
+): PvFlowNode[] {
+  const defaultSize = (n: PvFlowNode) => ({
+    width:  n.type === 'pipelineInput' ? 140 : n.type === 'conditionalDiamond' ? 100 : 220,
+    height: n.type === 'conditionalDiamond' ? 100 : 60,
+  });
+  const getSize = sizeOf ?? defaultSize;
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: 'LR', ranksep: 100, nodesep: 50 });
   nodes.forEach(n => {
-    const w = n.type === 'pipelineInput' ? 140 : n.type === 'conditionalDiamond' ? 100 : 220;
-    const h = n.type === 'conditionalDiamond' ? 100 : 60;
-    g.setNode(n.id, { width: w, height: h });
+    const { width, height } = getSize(n);
+    g.setNode(n.id, { width, height });
   });
   edges.forEach(e => g.setEdge(e.source, e.target));
   dagre.layout(g);
@@ -46,6 +54,10 @@ function applyLayout(nodes: PvFlowNode[], edges: PvFlowEdge[]): PvFlowNode[] {
     const gn = g.node(n.id);
     return { ...n, position: { x: gn.x - gn.width / 2, y: gn.y - gn.height / 2 } };
   });
+}
+
+function applyLayout(nodes: PvFlowNode[], edges: PvFlowEdge[]): PvFlowNode[] {
+  return applyDagreLayout(nodes, edges);
 }
 
 function buildChain(

@@ -213,6 +213,30 @@ export function DemoPage() {
       .get<ScenarioMeta[]>('/api/pipeline_visualizer/demo/scenarios')
       .then((data) => { setScenarios(data); setFetchingScenarios(false); })
       .catch(() => { setLoadError('Failed to load demo scenarios from server.'); setFetchingScenarios(false); });
+
+    // Restore card states by checking which scenarios are already loaded in OpenSearch
+    getHttp()
+      .get<Record<string, { loaded: boolean; simulatorPipeline: string; index: string }>>(
+        '/api/pipeline_visualizer/demo/status'
+      )
+      .then((status) => {
+        const initialStates: Record<string, CardState> = {};
+        const initialResults: Record<string, SetupResult> = {};
+        for (const [id, s] of Object.entries(status)) {
+          if (s.loaded) {
+            initialStates[id] = 'loaded';
+            initialResults[id] = {
+              created: [],
+              errors: [],
+              simulatorPipeline: s.simulatorPipeline,
+              index: s.index,
+            };
+          }
+        }
+        setCardStates(initialStates);
+        setResults(initialResults);
+      })
+      .catch(() => { /* best-effort — don't block the page */ });
   }, []);
 
   const setCardState = (id: string, state: CardState) =>

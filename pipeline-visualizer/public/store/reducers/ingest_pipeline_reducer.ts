@@ -33,7 +33,9 @@ const slice = createSlice({
     b.addCase(fetchIngestPipelines.pending, s => { s.loading = true; s.error = null; });
     b.addCase(fetchIngestPipelines.fulfilled, (s, a) => { s.loading = false; s.summaries = a.payload; });
     b.addCase(fetchIngestPipelines.rejected, (s, a) => { s.loading = false; s.error = a.payload as string; });
-    b.addCase(fetchIngestPipeline.fulfilled, (s, a) => { s.pipelines[a.payload.id] = a.payload.pipeline; });
+    b.addCase(fetchIngestPipeline.pending, s => { s.loading = true; s.error = null; });
+    b.addCase(fetchIngestPipeline.fulfilled, (s, a) => { s.loading = false; s.pipelines[a.payload.id] = a.payload.pipeline; });
+    b.addCase(fetchIngestPipeline.rejected, (s, a) => { s.loading = false; s.error = a.payload as string; });
     b.addCase(saveIngestPipeline.fulfilled, (s, a) => { s.pipelines[a.payload.id] = a.payload.body; });
     b.addCase(deleteIngestPipeline.fulfilled, (s, a) => {
       delete s.pipelines[a.payload];

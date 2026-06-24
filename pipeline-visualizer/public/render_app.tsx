@@ -35,8 +35,6 @@ class ErrorBoundary extends React.Component<
 }
 
 export function renderApp(_core: CoreStart, params: AppMountParameters) {
-  // eslint-disable-next-line no-console
-  console.log('[PipelineVisualizer] renderApp called — mounting React tree');
   ReactDOM.render(
     <ErrorBoundary>
       <Provider store={store}>

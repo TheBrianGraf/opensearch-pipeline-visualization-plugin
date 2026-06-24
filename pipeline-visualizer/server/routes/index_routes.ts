@@ -11,7 +11,7 @@ export function registerIndexRoutes(router: IRouter): void {
           filterPath: [
             '*.settings.index.default_pipeline',
             '*.settings.index.final_pipeline',
-            '*.settings.index.search.pipeline',
+            '*.settings.index.search.default_pipeline',
           ],
           expandWildcards: 'open' as any,
           ignoreUnavailable: true as any,
@@ -26,7 +26,7 @@ export function registerIndexRoutes(router: IRouter): void {
           const entry: IndexPipelineSettings = { indexName };
           if (idx.default_pipeline) entry.defaultPipeline = idx.default_pipeline;
           if (idx.final_pipeline) entry.finalPipeline = idx.final_pipeline;
-          if (idx.search?.pipeline) entry.searchPipeline = idx.search.pipeline;
+          if (idx.search?.default_pipeline) entry.searchPipeline = idx.search.default_pipeline;
           // Only include indices that have at least one pipeline setting
           if (entry.defaultPipeline || entry.finalPipeline || entry.searchPipeline) {
             results.push(entry);

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
-  EuiBasicTable, EuiBadge, EuiButtonIcon, EuiConfirmModal,
-  EuiFlexGroup, EuiFlexItem, EuiToolTip,
+  EuiBasicTable, EuiBadge, EuiConfirmModal,
+  EuiFlexGroup, EuiFlexItem, EuiButtonIcon,
+  EuiPopover, EuiContextMenuPanel, EuiContextMenuItem,
 } from '@elastic/eui';
 import { PipelineSummary } from '../../../common';
 import { MlBadge } from './ml_badge';
@@ -11,6 +12,59 @@ interface Props {
   pipelines: PipelineSummary[];
   loading: boolean;
   onDelete: (id: string, type: 'ingest' | 'search') => void;
+}
+
+interface RowActionsProps {
+  row: PipelineSummary;
+  onDelete: (row: PipelineSummary) => void;
+}
+
+function RowActions({ row, onDelete }: RowActionsProps) {
+  const history = useHistory();
+  const [open, setOpen] = useState(false);
+
+  const items = [
+    <EuiContextMenuItem
+      key="view"
+      icon="inspect"
+      onClick={() => { setOpen(false); history.push(`/pipeline-visualizer/${row.type}/${encodeURIComponent(row.id)}`); }}
+    >
+      View
+    </EuiContextMenuItem>,
+    <EuiContextMenuItem
+      key="edit"
+      icon="pencil"
+      onClick={() => { setOpen(false); history.push(`/pipeline-visualizer/editor/${row.type}/${encodeURIComponent(row.id)}`); }}
+    >
+      Edit
+    </EuiContextMenuItem>,
+    <EuiContextMenuItem
+      key="delete"
+      icon="trash"
+      style={{ color: '#BD271E' }}
+      onClick={() => { setOpen(false); onDelete(row); }}
+    >
+      Delete
+    </EuiContextMenuItem>,
+  ];
+
+  return (
+    <EuiPopover
+      button={
+        <EuiButtonIcon
+          iconType="boxesHorizontal"
+          aria-label="Actions"
+          onClick={() => setOpen(o => !o)}
+        />
+      }
+      isOpen={open}
+      closePopover={() => setOpen(false)}
+      panelPaddingSize="none"
+      anchorPosition="downRight"
+    >
+      <EuiContextMenuPanel style={{ minWidth: 160 }} items={items} />
+    </EuiPopover>
+  );
 }
 
 export function PipelineTable({ pipelines, loading, onDelete }: Props) {
@@ -52,43 +106,10 @@ export function PipelineTable({ pipelines, loading, onDelete }: Props) {
     { field: 'version' as const, name: 'Version', width: '80px', render: (v: number) => v ?? '—' },
     {
       name: 'Actions',
-      width: '100px',
-      actions: [
-        {
-          render: (row: PipelineSummary) => (
-            <EuiToolTip content="View">
-              <EuiButtonIcon
-                iconType="inspect"
-                aria-label="View"
-                onClick={() => history.push(`/pipeline-visualizer/${row.type}/${encodeURIComponent(row.id)}`)}
-              />
-            </EuiToolTip>
-          ),
-        },
-        {
-          render: (row: PipelineSummary) => (
-            <EuiToolTip content="Edit">
-              <EuiButtonIcon
-                iconType="pencil"
-                aria-label="Edit"
-                onClick={() => history.push(`/pipeline-visualizer/editor/${row.type}/${encodeURIComponent(row.id)}`)}
-              />
-            </EuiToolTip>
-          ),
-        },
-        {
-          render: (row: PipelineSummary) => (
-            <EuiToolTip content="Delete">
-              <EuiButtonIcon
-                iconType="trash"
-                color="danger"
-                aria-label="Delete"
-                onClick={() => setDeleteTarget(row)}
-              />
-            </EuiToolTip>
-          ),
-        },
-      ],
+      width: '60px',
+      render: (row: PipelineSummary) => (
+        <RowActions row={row} onDelete={setDeleteTarget} />
+      ),
     },
   ];
 

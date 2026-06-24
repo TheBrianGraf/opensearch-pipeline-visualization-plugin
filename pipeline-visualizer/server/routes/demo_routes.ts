@@ -28,7 +28,6 @@ const SCENARIOS: Record<string, ScenarioDef> = {
               field: 'request_ts',
               formats: ['dd/MMM/yyyy:HH:mm:ss Z'],
               target_field: '@timestamp',
-              ignore_missing: true,
               ignore_failure: true,
             },
           },
@@ -202,7 +201,7 @@ const SCENARIOS: Record<string, ScenarioDef> = {
       name: 'demo-products',
       settings: {
         'index.default_pipeline': 'demo-products-normalize',
-        'index.search.pipeline': 'demo-products-search',
+        'index.search.default_pipeline': 'demo-products-search',
       },
       mappings: {
         properties: {
@@ -300,7 +299,7 @@ const SCENARIOS: Record<string, ScenarioDef> = {
       name: 'demo-semantic-docs',
       settings: {
         'index.default_pipeline': 'demo-ml-embeddings',
-        'index.search.pipeline': 'demo-neural-search',
+        'index.search.default_pipeline': 'demo-neural-search',
         'index.knn': true,
       },
       mappings: {
@@ -350,6 +349,39 @@ interface ScenarioDef {
 // ── Route handlers ────────────────────────────────────────────────────────────
 
 export function registerDemoRoutes(router: IRouter): void {
+
+  // GET /api/pipeline_visualizer/demo/status — check which scenarios are currently loaded
+  router.get(
+    { path: '/api/pipeline_visualizer/demo/status', validate: false },
+    async (context, _req, response) => {
+      const client = context.core.opensearch.client.asCurrentUser;
+      const status: Record<string, { loaded: boolean; simulatorPipeline: string; index: string }> = {};
+
+      await Promise.all(
+        Object.entries(SCENARIOS).map(async ([id, scenario]) => {
+          const primaryPipeline = Object.keys(scenario.ingestPipelines)[0];
+          let loaded = false;
+          try {
+            if (primaryPipeline) {
+              await client.transport.request({ method: 'GET', path: `/_ingest/pipeline/${primaryPipeline}` });
+            } else {
+              await client.transport.request({ method: 'HEAD', path: `/${scenario.index.name}` });
+            }
+            loaded = true;
+          } catch {
+            loaded = false;
+          }
+          status[id] = {
+            loaded,
+            simulatorPipeline: scenario.simulatorSample.pipelineId,
+            index: scenario.index.name,
+          };
+        })
+      );
+
+      return response.ok({ body: status });
+    }
+  );
 
   // GET /api/pipeline_visualizer/demo/scenarios — list available scenarios
   router.get(

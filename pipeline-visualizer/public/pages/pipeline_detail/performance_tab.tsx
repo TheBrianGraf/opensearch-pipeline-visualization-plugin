@@ -14,7 +14,7 @@ import {
 } from '@elastic/eui';
 import { routeService } from '../../route_service';
 import { OsIngestPipeline, OsSearchPipeline } from '../../common';
-import { ingestPipelineToFlow, searchPipelineToFlow } from '../../models/pipeline_to_flow';
+import { ingestPipelineToFlow, searchPipelineToFlow, applyDagreLayout } from '../../models/pipeline_to_flow';
 import { PipelineInputNode } from '../../components/nodes/pipeline_input_node';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -242,7 +242,12 @@ export function PerformanceTab({ pipelineId, pipelineType, pipeline }: Props) {
       };
     });
 
-    return { nodes: augmented, edges: base.edges };
+    const relaid = applyDagreLayout(augmented, base.edges, (n) => {
+      if (n.type === 'pipelineInput') return { width: 140, height: 60 };
+      if (n.type === 'conditionalDiamond') return { width: 100, height: 100 };
+      return { width: 260, height: 150 };
+    });
+    return { nodes: relaid, edges: base.edges };
   }, [pipeline, pipelineId, pipelineType, stats]);
 
   const nodeTypes = useMemo(
